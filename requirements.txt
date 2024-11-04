@@ -4,3 +4,4 @@ sumy
 pydub
 googletrans
 transformers
+sentencepiece

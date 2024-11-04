@@ -1,0 +1,2 @@
+Meeting Notes (Vietnamese):
+Và nếu chúng ta nhìn lại các đoạn văn trên bảng trắng, tôi đã đi xa - chúng không chứa bao nhiêu, bao gồm bao nhiêu, ví dụ, chúng ta hãy nói rằng đoạn này trước khi một địa điểm được thêm vào nó có hàng trăm người sử dụng nó. - Những con số này sẽ thay đổi bởi vì họ cơ bản là địa điểm và khán giả là một bộ lọc trên này. - và ở đây, hy vọng rằng điều này sẽ cho phép tôi sử dụng đủ các con số để có đủ các con số cho điều này, nhưng ở đây chúng tôi sẽ có một đoạn mã số đại diện.
