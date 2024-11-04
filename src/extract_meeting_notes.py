@@ -8,11 +8,13 @@ from pydub import AudioSegment
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lsa import LsaSummarizer
+from sumy.summarizers.text_rank import TextRankSummarizer
+from transformers import MarianMTModel, MarianTokenizer
 import shutil
+# import nltk
 
-# Download necessary NLTK data
-import nltk
-nltk.download('punkt')
+# # Download necessary NLTK data
+# nltk.download('punkt')
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -100,20 +102,30 @@ except Exception as e:
     raise
 
 # Step 3: Create effective meeting notes from the transcription
-# (Uses text summarization to highlight key points)
+# (Uses combined text summarization with LSA and TextRank)
 def create_meeting_notes(text):
-    logging.info('Creating meeting notes from transcribed text.')
+    logging.info('Creating detailed meeting notes from transcribed text.')
     try:
         parser = PlaintextParser.from_string(text, Tokenizer("english"))
-        summarizer = LsaSummarizer()
-        summary_sentences = summarizer(parser.document, 5)  # Adjust number of sentences as needed
+        lsa_summarizer = LsaSummarizer()
+        textrank_summarizer = TextRankSummarizer()
 
-        notes = "\n- " + "\n- ".join(str(sentence) for sentence in summary_sentences)
-        logging.debug(f"Number of sentences in summary: {len(summary_sentences)}")
-        logging.info('Meeting notes created successfully.')
+        # Generate summaries from both methods
+        lsa_summary = lsa_summarizer(parser.document, 7)  # Adjust number of sentences for more detail
+        textrank_summary = textrank_summarizer(parser.document, 7)
+
+        # Combine summaries into one list and remove duplicates
+        combined_summary = list(set(lsa_summary + textrank_summary))
+
+        # Sort combined summaries by their original order in the document
+        combined_summary.sort(key=lambda sentence: text.find(str(sentence)))
+
+        notes = "\n- " + "\n- ".join(str(sentence) for sentence in combined_summary)
+        logging.debug(f"Number of sentences in combined summary: {len(combined_summary)}")
+        logging.info('Detailed meeting notes created successfully.')
         return notes
     except Exception as e:
-        logging.error(f"Error creating meeting notes: {e}")
+        logging.error(f"Error creating detailed meeting notes: {e}")
         raise
 
 meeting_notes = create_meeting_notes(combined_text)
@@ -128,6 +140,24 @@ except Exception as e:
     logging.error(f"Error saving meeting notes: {e}")
     raise
 
+# Translate meeting notes to Vietnamese using MarianMT
+logging.info('Translating meeting notes to Vietnamese.')
+try:
+    model_name = 'Helsinki-NLP/opus-mt-en-vi'
+    tokenizer = MarianTokenizer.from_pretrained(model_name)
+    translation_model = MarianMTModel.from_pretrained(model_name)
+
+    inputs = tokenizer.encode(meeting_notes, return_tensors='pt', max_length=512, truncation=True)
+    translated = translation_model.generate(inputs, max_length=512)
+    translated_notes = tokenizer.decode(translated[0], skip_special_tokens=True)
+
+    with open('output/meeting_notes_vi.txt', 'w', encoding='utf-8') as file:
+        file.write("Meeting Notes (Vietnamese):\n" + translated_notes)
+    logging.info("Translated meeting notes saved successfully to 'output/meeting_notes_vi.txt'")
+except Exception as e:
+    logging.error(f"Error translating meeting notes: {e}")
+    raise
+
 # Clean up temporary chunk files
 logging.info('Cleaning up temporary files.')
 try:
@@ -137,4 +167,4 @@ except Exception as e:
     logging.error(f"Error cleaning up temporary files: {e}")
     raise
 
-print("Meeting notes created successfully and saved to 'output/meeting_notes.txt'")
+print("Meeting notes created successfully and saved to 'output/meeting_notes.txt' and 'output/meeting_notes_vi.txt'")

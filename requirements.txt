@@ -2,3 +2,5 @@ openai-whisper
 ffmpeg-python
 sumy
 pydub
+googletrans
+transformers
