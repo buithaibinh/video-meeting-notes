@@ -1,2 +1,3 @@
-data/meeting_audio.mp3
-data/meeting_video.mov
+data
+output/full_transcript.txt
+output/meeting_notes.txt

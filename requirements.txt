@@ -1,2 +1,4 @@
 openai-whisper
 ffmpeg-python
+sumy
+pydub
